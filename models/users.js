@@ -33,10 +33,6 @@ const userSchema = new mongoose.Schema(
       type: [String], // Array of subjects (only for teachers)
       default: [],
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   },
   { timestamps: true }
 );
