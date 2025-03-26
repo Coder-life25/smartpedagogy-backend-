@@ -31,7 +31,7 @@ authRouter.post("/signup", async (req, res) => {
 
     // Send response (excluding password)
     res.cookie("token", token);
-    console.log(user);
+    // console.log(user);
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
     res.status(400).json({ message: err.message });

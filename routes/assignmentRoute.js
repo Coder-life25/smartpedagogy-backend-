@@ -3,6 +3,20 @@ const assignmentRoutes = express.Router();
 const Assignment = require("../models/assignments");
 const { AuthUser } = require("../middlewares/Auth"); // Ensure authentication
 
+{
+  /** students Routes */
+}
+
+// get all the assignments from the all teachers
+assignmentRoutes.get("/students", AuthUser, async (req, res) => {
+  try {
+    const assignments = await Assignment.find(); // Fetch all assignments
+    res.status(200).json(assignments);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching assignments", error });
+  }
+});
+
 // Create Assignment
 assignmentRoutes.post("/", AuthUser, async (req, res) => {
   try {
