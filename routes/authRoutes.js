@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const authRouter = express.Router();
 
-
 authRouter.post("/signup", async (req, res) => {
   try {
     const { name, email, password, role, subjects } = req.body;
@@ -21,6 +20,17 @@ authRouter.post("/signup", async (req, res) => {
       subjects,
     });
     user.save();
+    // Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d", // Token valid for 7 days
+      }
+    );
+
+    // Send response (excluding password)
+    res.cookie("token", token);
     console.log(user);
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {

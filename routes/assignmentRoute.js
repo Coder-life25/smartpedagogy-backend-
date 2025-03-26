@@ -37,6 +37,17 @@ assignmentRoutes.get("/", AuthUser, async (req, res) => {
   }
 });
 
+// Get assignment by Id
+
+assignmentRoutes.get("/:id", AuthUser, async (req, res) => {
+  try {
+    const assignment = await Assignment.findById(req.params.id);
+    res.json(assignment);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 //  Update Assignment
 assignmentRoutes.patch("/:id", AuthUser, async (req, res) => {
   try {
