@@ -10,6 +10,7 @@ const profileRouter = require("./routes/profileRoute");
 const assignmentRoutes = require("./routes/assignmentRoute");
 const submissionRoute = require("./routes/submissionRoute");
 const classOverviewRoute = require("./routes/classOverviewRoute");
+const checkAssignmentRoute = require("./routes/checkAssignmentRoute");
 
 app.use(express.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
@@ -22,6 +23,7 @@ app.use("/", profileRouter);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoute);
 app.use("/api/class/", classOverviewRoute);
+app.use("/api/check/", checkAssignmentRoute);
 
 connectDB()
   .then(() => {
