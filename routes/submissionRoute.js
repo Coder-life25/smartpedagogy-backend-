@@ -4,7 +4,6 @@ const Submission = require("../models/submission");
 const Assignment = require("../models/assignments");
 const submissionRoute = express.Router();
 
-
 submissionRoute.post("/upload", AuthUser, async (req, res) => {
   try {
     const { assignmentId, createdBy, file } = req.body;
@@ -58,14 +57,27 @@ submissionRoute.get("/pending", AuthUser, async (req, res) => {
   try {
     const studentId = req.user.id; // Get student ID from auth
     const allAssignments = await Assignment.find(); // Get all assignments
-    const submittedAssignments = await Submission.find({ studentId }).distinct(
-      "assignmentId"
+    // const submittedAssignments = await Submission.find({ studentId }).distinct(
+    //   "assignmentId"
+    // );
+
+    const submittedAssignments = await Submission.find({ studentId });
+    // console.log(submittedAssignments);
+
+    const submittedAssignmentIds = submittedAssignments.map((sub) =>
+      sub.assignmentId.toString()
     );
 
+    // console.log(allAssignments.length);
+    // console.log(submittedAssignmentIds);
+
     // Filter out assignments that were already submitted
-    const pendingAssignments = allAssignments.filter(
-      (assign) => !submittedAssignments.includes(assign._id.toString())
-    );
+    const pendingAssignments = allAssignments.filter((assign) => {
+      // console.log(assign._id.toString());
+      return !submittedAssignmentIds.includes(assign._id.toString());
+    });
+
+    // console.log(pendingAssignments.length);
 
     res.status(200).json(pendingAssignments);
   } catch (error) {
@@ -75,5 +87,3 @@ submissionRoute.get("/pending", AuthUser, async (req, res) => {
 });
 
 module.exports = submissionRoute;
-
-
