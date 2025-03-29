@@ -9,6 +9,7 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", AuthUser, async (req, res) => {
   try {
     const user = req.user;
+    console.log(req.user._id.toString());
     if (!user) {
       throw new Error("user not found");
     }
