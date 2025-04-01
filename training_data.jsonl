@@ -1,0 +1,48 @@
+{
+  "training_data": {
+    "examples": {
+      "examples": [
+        {
+          "text_input": "What is the difference between a switch and a router?",
+          "output": "{\"accuracy\": 0.90, \"common_mistakes\": [\"Incorrect distinction between layers\"], \"plagiarism_percentage\": 0.06, \"feedback\": \"Good explanation! Ensure to highlight OSI layer functions clearly.\"}"
+        },
+        {
+          "text_input": "Define an IP address.",
+          "output": "{\"accuracy\": 0.95, \"common_mistakes\": [\"Not mentioning IPv4 and IPv6\"], \"plagiarism_percentage\": 0.02, \"feedback\": \"Good, but mention both IPv4 and IPv6 versions.\"}"
+        },
+        {
+          "text_input": "What is a subnet mask?",
+          "output": "{\"accuracy\": 0.87, \"common_mistakes\": [\"Confusing it with an IP address\"], \"plagiarism_percentage\": 0.04, \"feedback\": \"Explain how it helps divide networks logically.\"}"
+        },
+        {
+          "text_input": "Explain the function of a MAC address.",
+          "output": "{\"accuracy\": 0.92, \"common_mistakes\": [\"Confusing with IP address\"], \"plagiarism_percentage\": 0.05, \"feedback\": \"Clearly differentiate MAC and IP addresses.\"}"
+        },
+        {
+          "text_input": "What is the purpose of DNS?",
+          "output": "{\"accuracy\": 0.93, \"common_mistakes\": [\"Not mentioning hierarchical structure\"], \"plagiarism_percentage\": 0.03, \"feedback\": \"Explain the hierarchical structure and caching mechanism.\"}"
+        },
+        {
+          "text_input": "What are the differences between TCP and UDP?",
+          "output": "{\"accuracy\": 0.89, \"common_mistakes\": [\"Misunderstanding reliability and speed\"], \"plagiarism_percentage\": 0.07, \"feedback\": \"Highlight connection-oriented vs. connectionless communication.\"}"
+        },
+        {
+          "text_input": "What is a VPN and how does it work?",
+          "output": "{\"accuracy\": 0.94, \"common_mistakes\": [\"Not mentioning encryption\"], \"plagiarism_percentage\": 0.05, \"feedback\": \"Include details on encryption and tunneling protocols.\"}"
+        },
+        {
+          "text_input": "Describe the OSI Model and its layers.",
+          "output": "{\"accuracy\": 0.88, \"common_mistakes\": [\"Skipping layers or incorrect order\"], \"plagiarism_percentage\": 0.09, \"feedback\": \"Make sure to cover all seven layers with functions.\"}"
+        },
+        {
+          "text_input": "What is the purpose of a firewall in networking?",
+          "output": "{\"accuracy\": 0.91, \"common_mistakes\": [\"Not explaining packet filtering\"], \"plagiarism_percentage\": 0.04, \"feedback\": \"Mention packet filtering, NAT, and stateful inspection.\"}"
+        },
+        {
+          "text_input": "What is an ARP request?",
+          "output": "{\"accuracy\": 0.86, \"common_mistakes\": [\"Confusing ARP with RARP\"], \"plagiarism_percentage\": 0.06, \"feedback\": \"Explain how ARP resolves IP to MAC addresses.\"}"
+        }
+      ]
+    }
+  }
+}

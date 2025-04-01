@@ -64,7 +64,15 @@ authRouter.post("/login", async (req, res) => {
     );
 
     // Send response (excluding password)
-    res.cookie("token", token);
+    // res.cookie("token", token);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "Strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.status(200).json({
       message: "Login successful",
 
@@ -82,11 +90,16 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/logout", (req, res) => {
-  //   res.cookie("token", null, { expires: new Date(Date.now()) });
-  //   res.send("logout successfully");
-  res
-    .cookie("token", null, { expires: new Date(Date.now()) })
-    .send("logout successfully");
+  // res.cookie("token", null, { expires: new Date(Date.now()) });
+  // res.send("logout successfully");
+
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    expires: new Date(0), // Expire immediately
+  });
+  res.send("logout successfully");
 });
 
 module.exports = authRouter;

@@ -1,93 +1,19 @@
 const express = require("express");
 const axios = require("axios");
-const pdfParse = require("pdf-parse");
-const Tesseract = require("tesseract.js");
-const { Minhash } = require("minhash"); // Correct MinHash package
 require("dotenv").config();
 const Submission = require("../models/submission");
+
+const extractText = require("../helper/extractQ&A");
+const extractTextFromPDF = require("../helper/extractQ&AFromPDF");
+const { PROMPT } = require("../helper/constants");
 
 const checkAssignmentRoute = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent";
-
-// Function to extract text from a Base64 PDF
-const extractTextFromPDF = async (base64String) => {
-  const pdfBuffer = Buffer.from(base64String, "base64");
-  const pdfData = await pdfParse(pdfBuffer);
-  return pdfData.text;
-};
-
-// Function to extract text from a Base64 Image using OCR
-const extractTextFromImage = async (base64String) => {
-  return new Promise((resolve, reject) => {
-    Tesseract.recognize(Buffer.from(base64String, "base64"), "eng", {
-      logger: (m) => console.log(m),
-    })
-      .then(({ data: { text } }) => resolve(text))
-      .catch((error) => reject(error));
-  });
-};
-
-// Function to compute MinHash signature
-const computeMinHash = (text) => {
-  if (!text || text.trim().length === 0) return []; // Handle empty input
-
-  const minhash = new Minhash();
-  text.split(/\s+/).forEach((word) => {
-    if (word) minhash.update(word); // Ensure valid words are added
-  });
-
-  return Array.from(minhash.hashValues || []); // Ensure it's an array
-};
-
-// Function to check plagiarism using Jaccard similarity
-const checkPlagiarism = async (submissionText) => {
-  const newSubmissionHash = computeMinHash(submissionText);
-  if (!Array.isArray(newSubmissionHash)) {
-    throw new Error(
-      "MinHash computation failed: newSubmissionHash is not an array"
-    );
-  }
-
-  const allSubmissions = await Submission.find();
-
-  let maxSimilarity = 0;
-  let mostSimilarAssignment = null;
-
-  for (const pastSubmission of allSubmissions) {
-    const pastText = Buffer.from(
-      pastSubmission.file.split(",")[1],
-      "base64"
-    ).toString("utf-8");
-
-    const pastSubmissionHash = computeMinHash(pastText);
-
-    if (!Array.isArray(pastSubmissionHash)) {
-      console.warn("Skipping past submission due to invalid MinHash result.");
-      continue;
-    }
-
-    // Jaccard similarity calculation
-    const intersection = newSubmissionHash.filter((hash) =>
-      pastSubmissionHash.includes(hash)
-    ).length;
-    const union = new Set([...newSubmissionHash, ...pastSubmissionHash]).size;
-    const similarity = union === 0 ? 0 : intersection / union; // Avoid division by zero
-
-    if (similarity > maxSimilarity) {
-      maxSimilarity = similarity;
-      mostSimilarAssignment = pastSubmission;
-    }
-  }
-
-  return {
-    similarity: maxSimilarity,
-    similarAssignment: mostSimilarAssignment,
-  };
-};
-
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent";  
+  
+ 
 // Analyze Assignment API
 checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
   try {
@@ -107,63 +33,122 @@ checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
     }
     const mimeType = fileParts[0].split(":")[1].split(";")[0];
     const base64Content = fileParts[1];
-
-    let assignmentText = "";
+    let outputData = "";
 
     if (mimeType === "application/pdf") {
       console.log("Processing PDF File...");
-      assignmentText = await extractTextFromPDF(base64Content);
-    } else if (mimeType.startsWith("image/")) {
+      outputData = await extractTextFromPDF(base64Content);
+      console.log(outputData);
+      // assignmentText = await extractTextFromPDF(base64Content);
+    } else if (mimeType === "image/jpeg" || mimeType === "image/png") {
       console.log("Processing Image File...");
-      assignmentText = await extractTextFromImage(base64Content);
-    } else if (mimeType === "text/plain") {
-      console.log("Processing Plain Text File...");
-      assignmentText = Buffer.from(base64Content, "base64").toString("utf-8");
+      outputData = await extractText(base64Content);
+      console.log(outputData);
+      // assignmentText = await extractTextFromImage(base64Content);
     } else {
       return res.status(400).json({ error: "Unsupported file format" });
     }
 
-    console.log("Extracted Text:", assignmentText.substring(0, 200)); // Log first 200 chars
-
-    // Check for plagiarism
-    const { similarity, similarAssignment } = await checkPlagiarism(
-      assignmentText
-    );
-    console.log(`Plagiarism Similarity: ${similarity * 100}%`);
-
-    // Prepare request payload for Gemini
-    const requestData = {
-      contents: [
-        {
-          parts: [
+    const results = await Promise.all(
+      outputData.map(async (data) => {
+        const requestData = {
+          contents: [
             {
-              text: `Evaluate the following assignment based on accuracy, common mistakes, plagiarism, and feedback and write the accuracy in float form, common mistakes in text, plagiarism in text and feedback in text. Don't give irrelevant output.:\n\n${assignmentText}`,
+              parts: [
+                {
+                  text:
+                    PROMPT +
+                    `
+  
+          Now, evaluate the following assignment:
+          Teacher Question: ${data.question}
+          Student Answer: ${data.answer}
+          Evaluation:
+      `,
+                },
+              ],
             },
           ],
-        },
-      ],
-      generationConfig: { maxOutputTokens: 1024 },
-    };
+          generationConfig: { maxOutputTokens: 1024 },
+        };
 
-    // Call Gemini API
-    const response = await axios.post(
-      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
-      requestData,
-      { headers: { "Content-Type": "application/json" } }
+        // Call Gemini API
+        const response = await axios.post(
+          `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+          requestData,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        const evaluationText =
+          response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+          "No response from AI";
+
+        // Extract JSON from backticks and parse it
+        const jsonMatch = evaluationText.match(/```json\n([\s\S]*?)\n```/);
+        if (!jsonMatch) {
+          console.error("Invalid response format from AI:", evaluationText);
+          return null;
+        }
+
+        try {
+          return JSON.parse(jsonMatch[1]);
+        } catch (error) {
+          console.error("Error parsing AI response:", error);
+          return null;
+        }
+      })
     );
 
-    // Extract response from Gemini
-    const geminiResponse =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response from AI";
+    // Filter out null responses
+    const validResults = results.filter((r) => r !== null);
+
+    // Calculate overall feedback
+    const overallFeedback = {
+      accuracy: 0,
+      completeness: 0,
+      instruction_following: 0,
+      creativity: 0,
+      writing_quality: 0,
+      reasoning: 0,
+      feedback: [],
+    };
+
+    validResults.forEach((result) => {
+      overallFeedback.accuracy += parseFloat(result.accuracy || "0");
+      overallFeedback.completeness += parseFloat(result.completeness || "0");
+      overallFeedback.instruction_following += parseFloat(
+        result.instruction_following || "0"
+      );
+      overallFeedback.creativity += parseFloat(result.creativity || "0");
+      overallFeedback.writing_quality += parseFloat(
+        result.writing_quality || "0"
+      );
+      overallFeedback.reasoning += parseFloat(result.reasoning || "0");
+      overallFeedback.feedback.push(result.feedback);
+    });
+
+    const totalQuestions = validResults.length;
+    if (totalQuestions > 0) {
+      overallFeedback.accuracy =
+        (overallFeedback.accuracy / totalQuestions).toFixed(2) + "%";
+      overallFeedback.completeness =
+        (overallFeedback.completeness / totalQuestions).toFixed(2) + "%";
+      overallFeedback.instruction_following =
+        (overallFeedback.instruction_following / totalQuestions).toFixed(2) +
+        "%";
+      overallFeedback.creativity =
+        (overallFeedback.creativity / totalQuestions).toFixed(2) + "%";
+      overallFeedback.writing_quality =
+        (overallFeedback.writing_quality / totalQuestions).toFixed(2) + "%";
+      overallFeedback.reasoning =
+        (overallFeedback.reasoning / totalQuestions).toFixed(2) + "%";
+      overallFeedback.feedback = overallFeedback.feedback.join(" ");
+    }
 
     // Return results to frontend
     res.status(200).json({
-      feedback: jsonData,
-      plagiarism: {
-        similarity: similarity * 100,
-        matchedAssignment: similarAssignment ? similarAssignment._id : null,
-      },
+      individualFeedback: validResults,
+      overallFeedback,
     });
   } catch (error) {
     console.error("Error analyzing assignment:", error);
