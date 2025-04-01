@@ -2,22 +2,23 @@ const express = require("express");
 const axios = require("axios");
 require("dotenv").config();
 const Submission = require("../models/submission");
-
+const AssignmentFeedback = require("../models/assignmentFeedback");
 const extractText = require("../helper/extractQ&A");
 const extractTextFromPDF = require("../helper/extractQ&AFromPDF");
 const { PROMPT } = require("../helper/constants");
+const { AuthUser } = require("../middlewares/Auth");
 
 const checkAssignmentRoute = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent";  
-  
- 
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-8b:generateContent";
+
 // Analyze Assignment API
-checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
+checkAssignmentRoute.post("/analyze/assignment", AuthUser, async (req, res) => {
   try {
     const { submissionId } = req.body;
+    const studentId = req.user._id;
     console.log("Processing Submission ID:", submissionId);
 
     // Fetch submitted assignment
@@ -25,6 +26,9 @@ checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
     if (!submission) {
       return res.status(404).json({ error: "Assignment not found" });
     }
+
+    const assignmentId = submission.assignmentId;
+    console.log(assignmentId);
 
     // Extract MIME type and Base64 content
     const fileParts = submission.file.split(",");
@@ -40,7 +44,11 @@ checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
       outputData = await extractTextFromPDF(base64Content);
       console.log(outputData);
       // assignmentText = await extractTextFromPDF(base64Content);
-    } else if (mimeType === "image/jpeg" || mimeType === "image/png") {
+    } else if (
+      mimeType === "image/jpeg" ||
+      mimeType === "image/jpg" ||
+      mimeType === "image/png"
+    ) {
       console.log("Processing Image File...");
       outputData = await extractText(base64Content);
       console.log(outputData);
@@ -144,6 +152,15 @@ checkAssignmentRoute.post("/analyze/assignment", async (req, res) => {
         (overallFeedback.reasoning / totalQuestions).toFixed(2) + "%";
       overallFeedback.feedback = overallFeedback.feedback.join(" ");
     }
+
+    const feedbackEntry = new AssignmentFeedback({
+      studentId,
+      assignmentId,
+      individualFeedback: validResults,
+      overallFeedback,
+    });
+
+    await feedbackEntry.save();
 
     // Return results to frontend
     res.status(200).json({

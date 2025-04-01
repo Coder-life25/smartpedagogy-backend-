@@ -4,6 +4,8 @@ const Submission = require("../models/submission");
 const Assignment = require("../models/assignments");
 const submissionRoute = express.Router();
 
+
+// uploading the assignments
 submissionRoute.post("/upload", AuthUser, async (req, res) => {
   try {
     const { assignmentId, createdBy, file } = req.body;
@@ -38,6 +40,7 @@ submissionRoute.post("/upload", AuthUser, async (req, res) => {
   }
 });
 
+// get submitted assignments
 submissionRoute.get("/submitted", AuthUser, async (req, res) => {
   try {
     const studentId = req.user.id; // Get student ID from auth
@@ -52,7 +55,7 @@ submissionRoute.get("/submitted", AuthUser, async (req, res) => {
   }
 });
 
-// ✅ Get pending assignments
+// Get pending assignments
 submissionRoute.get("/pending", AuthUser, async (req, res) => {
   try {
     const studentId = req.user.id; // Get student ID from auth
@@ -85,5 +88,27 @@ submissionRoute.get("/pending", AuthUser, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+// get assignment assignmentId
+submissionRoute.get("/getSubmissionId/:assignmentId", async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+
+    // Find submission by assignmentId
+    const submission = await Submission.findOne({ assignmentId });
+
+    if (!submission) {
+      return res.status(404).json({ error: "No submission found for this assignment" });
+    }
+
+    // Return submissionId
+    res.status(200).json({ submissionId: submission._id });
+  } catch (error) {
+    console.error("Error fetching submission ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 module.exports = submissionRoute;
