@@ -12,10 +12,11 @@ const submissionRoute = require("./routes/submissionRoute");
 const classOverviewRoute = require("./routes/classOverviewRoute");
 const checkAssignmentRoute = require("./routes/checkAssignmentRoute");
 const performanceRoute = require("./routes/performanceRoute");
+const feedbackRoute = require("./routes/feedbackRoute");
+
 app.use(express.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-
 app.use(cookieParser());
 
 app.use("/", authRouter);
@@ -25,6 +26,7 @@ app.use("/api/submissions", submissionRoute);
 app.use("/api/class/", classOverviewRoute);
 app.use("/api/check/", checkAssignmentRoute);
 app.use("/api/performance/", performanceRoute);
+app.use("/api/feedback/", feedbackRoute);
 
 connectDB()
   .then(() => {

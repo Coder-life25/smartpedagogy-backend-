@@ -90,7 +90,7 @@ submissionRoute.get("/pending", AuthUser, async (req, res) => {
 });
 
 
-// get assignment assignmentId
+// get assignment by assignmentId
 submissionRoute.get("/getSubmissionId/:assignmentId", async (req, res) => {
   try {
     const { assignmentId } = req.params;
