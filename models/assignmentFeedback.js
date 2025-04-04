@@ -5,7 +5,7 @@ const feedbackSchema = new mongoose.Schema(
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: "Student", // Reference to the Student collection
+      ref: "User", // Reference to the Student collection
     },
     assignmentId: {
       type: mongoose.Schema.Types.ObjectId,

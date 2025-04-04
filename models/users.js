@@ -27,7 +27,8 @@ const userSchema = new mongoose.Schema(
     },
     profilePic: {
       type: String, // URL of profile image
-      default: "https://via.placeholder.com/150",
+      default:
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQB0a9Vv--jOowQtVo_DNHzY7CvSizocuT8pA&s",
     },
     subjects: {
       type: [String], // Array of subjects (only for teachers)

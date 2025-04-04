@@ -7,7 +7,11 @@ performanceRoute.get("/student/:id", async (req, res) => {
   const studentId = req.params.id;
   try {
     const result = await AssignmentFeedback.aggregate([
-      { $match: { studentId: new mongoose.Types.ObjectId(studentId) } },
+      {
+        $match: mongoose.Types.ObjectId.isValid(studentId)
+          ? { studentId: new mongoose.Types.ObjectId(studentId) }
+          : { studentId: studentId }, // If stored as a string
+      },
       {
         $group: {
           _id: "$studentId",

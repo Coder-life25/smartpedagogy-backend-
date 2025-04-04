@@ -13,6 +13,7 @@ const classOverviewRoute = require("./routes/classOverviewRoute");
 const checkAssignmentRoute = require("./routes/checkAssignmentRoute");
 const performanceRoute = require("./routes/performanceRoute");
 const feedbackRoute = require("./routes/feedbackRoute");
+const teacherFeedbackInsightRoute = require("./routes/teacerFeedbackInsightRoute");
 
 app.use(express.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
@@ -27,6 +28,8 @@ app.use("/api/class/", classOverviewRoute);
 app.use("/api/check/", checkAssignmentRoute);
 app.use("/api/performance/", performanceRoute);
 app.use("/api/feedback/", feedbackRoute);
+
+app.use("/api/teacher/", teacherFeedbackInsightRoute);
 
 connectDB()
   .then(() => {
