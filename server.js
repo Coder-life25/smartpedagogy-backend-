@@ -20,6 +20,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
   "https://smart-pedagogy.vercel.app",
 ];
+//const allowedOrigins = "http://localhost:5173";
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -33,6 +34,10 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+app.get("/", (req, res) => {
+  res.send("SmartPedagogy Backend is Live 🚀");
+});
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
