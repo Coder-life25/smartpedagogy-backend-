@@ -4,7 +4,6 @@ const Submission = require("../models/submission");
 const Assignment = require("../models/assignments");
 const submissionRoute = express.Router();
 
-
 // uploading the assignments
 submissionRoute.post("/upload", AuthUser, async (req, res) => {
   try {
@@ -13,6 +12,20 @@ submissionRoute.post("/upload", AuthUser, async (req, res) => {
 
     if (!assignmentId || !createdBy || !file) {
       return res.status(400).json({ error: "All fields are required." });
+    }
+
+    // 🔒 Check if the student already submitted this assignment
+    const existingSubmission = await Submission.findOne({
+      assignmentId,
+      studentId,
+    });
+
+    if (existingSubmission) {
+      return res.status(409).json({
+        // 409 Conflict
+        error: "Assignment already submitted.",
+        message: "You have already submitted this assignment.",
+      });
     }
 
     // Extract filename from Base64 (metadata)
@@ -89,7 +102,6 @@ submissionRoute.get("/pending", AuthUser, async (req, res) => {
   }
 });
 
-
 // get assignment by assignmentId
 submissionRoute.get("/getSubmissionId/:assignmentId", async (req, res) => {
   try {
@@ -99,7 +111,9 @@ submissionRoute.get("/getSubmissionId/:assignmentId", async (req, res) => {
     const submission = await Submission.findOne({ assignmentId });
 
     if (!submission) {
-      return res.status(404).json({ error: "No submission found for this assignment" });
+      return res
+        .status(404)
+        .json({ error: "No submission found for this assignment" });
     }
 
     // Return submissionId
@@ -109,6 +123,5 @@ submissionRoute.get("/getSubmissionId/:assignmentId", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 module.exports = submissionRoute;

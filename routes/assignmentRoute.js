@@ -10,7 +10,7 @@ const { AuthUser } = require("../middlewares/Auth"); // Ensure authentication
 // get all the assignments from the all teachers
 assignmentRoutes.get("/students", AuthUser, async (req, res) => {
   try {
-    const assignments = await Assignment.find(); // Fetch all assignments
+    const assignments = await Assignment.find().sort({ createdAt: -1 }); // Sort by newest first
     res.status(200).json(assignments);
   } catch (error) {
     res.status(500).json({ message: "Error fetching assignments", error });
