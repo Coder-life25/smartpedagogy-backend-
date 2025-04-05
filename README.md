@@ -44,11 +44,11 @@ This is the **backend** part of the SmartPedagogy project. It powers all logic b
 ```
 smartpedagogy-backend/
 │
-├── config/             → connect mongodb database
-├── helper/             → helper function for APIs routes
+├── config/             → Contains configuration files for establishing and managing the MongoDB connection
+├── helper/             → Helper functions for API routes
 ├── models/             → Mongoose models
 ├── middlewares/        → JWT, role checks
-├── routes/             → API routes for assignments, auth, users,submissions, AI evaluation
+├── routes/             → API routes for assignments, authentication, user management, submissions, and AI evaluation
 ├── server.js           → Main Express app
 └── .env                → Environment variables
 ```
